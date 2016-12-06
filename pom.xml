@@ -29,7 +29,7 @@
         <!--</repository>-->
         <repository>
             <id>maven</id>
-            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+            <url>http://118.178.227.62:8081/nexus/content/repositories/central/</url>
         </repository>
 
         <repository>
@@ -50,6 +50,12 @@
             <groupId>com.github.xuejike</groupId>
             <artifactId>bd_framework_core</artifactId>
             <version>v0.1-release</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>20041127.091804</version>
         </dependency>
     </dependencies>
 

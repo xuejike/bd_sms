@@ -7,7 +7,7 @@ public class TplTool {
     public static String build(String msgTpl,String... params){
         if (params!=null){
             for (int i = 0; i < params.length; i++) {
-                msgTpl=msgTpl.replaceAll("{"+i+"}",params[i]);
+                msgTpl=msgTpl.replaceAll("\\{"+i+"\\}",params[i]);
             }
         }
         return msgTpl;

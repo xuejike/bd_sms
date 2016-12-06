@@ -1,9 +1,16 @@
 package com.bidanet.bdcms.plugin.sms;
 
+import com.bidanet.bdcms.plugin.sms.exception.SmsException;
+import com.bidanet.bdcms.plugin.sms.exception.SysSmsException;
+import com.bidanet.bdcms.plugin.sms.exception.UserSmsException;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.codec.net.URLCodec;
 
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 
@@ -11,7 +18,7 @@ import java.util.List;
  * 企信通 短信发送接口
  */
 public class QixintongSmsImpl implements Sms {
-    protected String sendUrl="http://42.96.248.183:8080/sendsms.php\n";
+    protected String sendUrl="http://42.96.248.183:8080/sendsms.php";
 
     protected static HashMap<String,String> errorMsgMap;
     static {
@@ -48,30 +55,60 @@ public class QixintongSmsImpl implements Sms {
      * 密码
      */
     protected String pwd;
+    protected String md5Pwd;
 
 
     @Override
     public void send(String tel, String msgTpl, String... params) {
-
+        String message = TplTool.build(msgTpl, params);
+        sendSms(tel,message);
     }
 
     @Override
     public void sendAll(List<String> tel, String msgTpl, String... params) {
-
+        String joinTel = String.join(",", tel);
+        sendSms(joinTel,TplTool.build(msgTpl,params));
     }
-    protected void sendSms(String mobile,String msg){
+    protected void sendSms(String mobile,String msg)  {
+        URLCodec urlCodec = new URLCodec("GBK");
+        if (md5Pwd==null){
+            //16位md5
+            md5Pwd= DigestUtils.md5Hex(pwd).substring(8,24);
+        }
         try {
-            HttpResponse<String> response = Unirest.get(sendUrl)
-                    .queryString("userid", userId)
-                    .queryString("username", username)
-                    .queryString("passwordMd5", "")
-                    .queryString("mobile", mobile)
-                    .queryString("message", msg)
-                    .asString();
+            String encode = urlCodec.encode(msg);
+            HttpResponse<String> response = Unirest.get(
+                    "http://42.96.248.183:8080/sendsms.php?" +
+                            "userid="+userId +
+                            "&username="+username +
+                            "&passwordMd5="+md5Pwd +
+                            "&mobile="+mobile +
+                            "&message="+encode
+            ).asString();
+            String body = response.getBody();
+            long result = Long.parseLong(body);
+            if(result>0){
+
+            }else{
+                if (body.equals("-14")||body.equals("-9")){
+                    String s = errorMsgMap.get(body);
+                    throw new UserSmsException(body+"=>"+s);
+                }else{
+                    String s = errorMsgMap.get(body);
+                    throw new SysSmsException(body+"=>"+s);
+                }
+
+            }
+
 
 
         } catch (UnirestException e) {
             e.printStackTrace();
+            throw new SmsException("网络异常");
+
+        } catch (EncoderException e) {
+            e.printStackTrace();
+            throw new SmsException("短信内容编码异常");
         }
     }
 
