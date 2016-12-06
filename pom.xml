@@ -29,7 +29,8 @@
         <!--</repository>-->
         <repository>
             <id>maven</id>
-            <url>http://118.178.227.62:8081/nexus/content/repositories/central/</url>
+
+            <url>http://repo1.maven.org/maven2</url>
         </repository>
 
         <repository>
